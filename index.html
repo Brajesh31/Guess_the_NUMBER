@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/logo.png" type="image/png">
+    <title>Guess the Number</title>
+
+    <!-- Google Fonts Link -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- Tailwind CSS Link -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Animate.css for animations -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
+    <style>
+        /* Center Modal Properly */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        /* Improved Layout */
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .game-box {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .status-box {
+            max-width: 350px;
+            width: 100%;
+        }
+
+        /* Footer Alignment Fix */
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-r from-teal-200 to-blue-300 text-gray-900 font-poppins flex flex-col min-h-screen justify-between">
+
+    <!-- Modal for Rules -->
+    <div id="rulesModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-semibold mb-4">Game Rules & Developer Info</h2>
+            <ul class="text-left list-disc pl-5">
+                <li>Guess the number between 1 and 100.</li>
+                <li>You have 10 chances to guess correctly.</li>
+                <li>3 correct guesses in a row reset your chances to 10.</li>
+            </ul>
+            <h3 class="font-semibold mt-4">About the Developer:</h3>
+            <p>Developed by <strong>Abishek S</strong>, a passionate software developer.</p>
+            <div class="mt-4">
+                <button class="close-btn bg-red-600 text-white py-2 px-5 rounded" id="closeModalBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Animated Top Bar -->
+    <div class="w-full bg-indigo-600 text-white text-center py-2">
+        <p class="text-lg font-semibold">Welcome to Guess the Number Game 🎮</p>
+    </div>
+
+    <!-- Main Game Section -->
+    <div class="main-container py-8 px-4 mx-auto">
+
+        <!-- Game Container -->
+        <div class="game-box bg-white p-6 rounded-xl shadow-lg text-center">
+            <h1 class="text-3xl font-bold text-indigo-700 mb-4">🎯 Guess the Number</h1>
+            <p class="text-lg text-gray-600 mb-4">I have chosen a number between <b>1</b> and <b>100</b>. Try to guess it!</p>
+
+            <div class="input-container">
+                <input id="guessInput" type="number" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Enter your guess..." min="1" max="100">
+                <button onclick="checkGuess()" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all">Submit Guess</button>
+            </div>
+
+            <p id="message" class="text-lg font-semibold text-gray-600 mt-3"></p>
+
+            <button onclick="resetGame()" class="w-full mt-4 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-all">Reset Game</button>
+        </div>
+
+        <!-- Game Status -->
+        <div class="status-box bg-gray-50 p-6 rounded-xl shadow-lg text-center">
+            <h2 class="text-xl font-semibold text-indigo-700 mb-2">Game Status</h2>
+            <p class="text-lg text-gray-600">Score: <span id="score">0</span></p>
+            <p class="text-lg text-gray-600">Chances: <span id="chances">10</span></p>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white text-center text-sm py-4 mt-6">
+        <div class="footer-links mb-4">
+            <a href="https://www.linkedin.com/in/abishek04" class="hover:text-blue-500"><i class="fab fa-linkedin"></i> LinkedIn</a>
+            <a href="https://www.github.com/AbishekSathiyan" class="hover:text-gray-300"><i class="fab fa-github"></i> GitHub</a>
+            <a href="https://www.instagram.com/entabilogist_abi" class="hover:text-red-500"><i class="fab fa-instagram"></i> Instagram</a>
+            <a href="https://abisheksathiyan.github.io/Abishek_Portfolio/" class="hover:text-blue-400"><i class="fas fa-laptop-code"></i> Portfolio</a>
+        </div>
+        <p class="text-sm text-gray-400">&copy; 2025 Abishek S. All rights reserved.</p>
+    </footer>
+
+    <script>
+    let secretNumber, chances, score, consecutiveCorrectGuesses;
+
+function startGame() {
+    secretNumber = Math.floor(Math.random() * 100) + 1;
+    chances = 10;
+    score = 0;
+    consecutiveCorrectGuesses = 0;
+    updateUI();
+    console.log("Answer is: " + secretNumber);
+}
+
+function updateUI(message = '') {
+    document.getElementById('message').innerText = message;
+    document.getElementById('score').innerText = score;
+    document.getElementById('chances').innerText = chances;
+    document.getElementById('guessInput').value = '';
+}
+
+function checkGuess() {
+    const guess = parseInt(document.getElementById('guessInput').value);
+    if (isNaN(guess) || guess < 1 || guess > 100) {
+        updateUI('⚠️ Enter a number between 1 and 100.');
+        return;
+    }
+
+    chances--;
+
+    if (guess === secretNumber) {
+        score += 10;
+        consecutiveCorrectGuesses++;
+
+        if (consecutiveCorrectGuesses === 3) {
+            chances = 10; // Reset chances after 3 correct guesses
+            consecutiveCorrectGuesses = 0;
+        }
+
+        updateUI('🎉 Correct! New number generated.');
+        
+        setTimeout(() => {
+            secretNumber = Math.floor(Math.random() * 100) + 1;
+            console.log("New Answer is: " + secretNumber);
+            updateUI('');
+        }, 1500);
+        
+    } else {
+        updateUI(guess < secretNumber ? '📉 Too low!' : '📈 Too high!');
+    }
+
+    if (chances === 0) {
+        updateUI('❌ Game Over! Resetting...');
+        setTimeout(resetGame, 3000);
+    }
+}
+
+function resetGame() {
+    startGame();
+}
+
+window.onload = () => document.getElementById('rulesModal').style.display = 'flex';
+document.getElementById('closeModalBtn').onclick = () => document.getElementById('rulesModal').style.display = 'none';
+
+startGame();
+
+</script>
